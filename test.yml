@@ -1,0 +1,347 @@
+openapi: 3.0.1
+info:
+  title: Микросервис Account Settings API
+  description: Управление избранными счетами клиента
+  version: "1.0"
+servers:
+  - url: 'https://test-alfa-mobile.alfabank.ru/mobile/welcome/api/v1/account-settings/'
+    description: Integration
+  - url: 'https://alfa-mobile.alfabank.ru/mobile/welcome/api/v1/account-settings/'
+    description: Production
+  - url: '{schema}://{host}:{port}/{basePath}'
+    description: Other
+    variables:
+      schema:
+        default: http
+        enum:
+          - http
+          - https
+      host:
+        default: 'test-alfa-mobile.alfabank.ru'
+      port:
+        default: '80'
+      basePath:
+        default: 'mobile/welcome/api/v1/account-settings/'
+
+tags:
+  - name: AccountSettingsController
+    description: ""
+paths:
+  /settings:
+    get:
+      tags:
+        - AccountSettingsController
+      summary: Метод для получения настроек счетов
+      operationId: getSettings
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountSettingsResponse'
+              examples:
+                getSettingsResponseOkExample:
+                  $ref: '#/components/examples/getSettingsResponseOkExample'
+                getSettingsResponseNotFoundExample:
+                  $ref: '#/components/examples/getSettingsResponseNotFoundExample'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+
+    put:
+      tags:
+        - AccountSettingsController
+      summary: Метод для изменения настроек счетов
+      operationId: update
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        description: Запрос
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountSettingsUpdateRequest'
+            examples:
+              updateExampleFill:
+                $ref: '#/components/examples/updateExampleFill'
+              updateExampleNonFill:
+                $ref: '#/components/examples/updateExampleNonFill'
+        required: true
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyObject'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+
+  /favorites/orders:
+    put:
+      tags:
+        - AccountSettingsController
+      summary: Метод для изменения порядка избранных счетов
+      operationId: updateRequest
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        description: Запрос
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFavoriteAccountsOrder'
+            examples:
+              updateRequestExample:
+                $ref: '#/components/examples/updateRequestExample'
+        required: true
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyObject'
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    userId:
+      name: AUTH-USER-ID
+      in: header
+      description: CUS пользователя
+      required: true
+      schema:
+        type: string
+        default: AAAAAA
+
+  #Ошибки
+  responses:
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            errorExample:
+              $ref: '#/components/examples/errorExample'
+    500:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            errorExample:
+              $ref: '#/components/examples/errorExample'
+
+  # Схемы
+  schemas:
+    EmptyObject:
+      type: object
+    ErrorResponse:
+      type: object
+      properties:
+        errorId:
+          description: Id ошибки
+          type: string
+        application:
+          description: Id приложения
+          type: string
+        errorCode:
+          description: Код ошибки
+          type: string
+        messages:
+          type: object
+          properties:
+            en:
+              description: Описание ошибки на английском языке
+              type: string
+            ru:
+              description: Описание ошибки на русском языке
+              type: string
+
+    AccountSettingsResponse:
+      type: object
+      properties:
+        hasAccountSettings:
+          description: Наличие настроек в БД
+          type: boolean
+        accountsSettings:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountSettingsDto'
+
+    AccountSettingsDto:
+      type: object
+      properties:
+        accountNumber:
+          description: Номер счета
+          maxLength: 20
+          type: string
+        settings:
+          $ref: '#/components/schemas/SettingsDto'
+
+    SettingsDto:
+      type: object
+      properties:
+        order:
+          description: Порядковый номер счета
+          type: integer
+        account:
+          $ref: '#/components/schemas/AccountSettingDto'
+        credit:
+          $ref: '#/components/schemas/CreditSettingDto'
+
+    AccountSettingDto:
+      type: object
+      properties:
+        isFavorite:
+          description: Признак скрытия в списке продуктов
+          type: boolean
+          default: false
+        isHiddenAmount:
+          description: Признак скрытия баланса
+          type: boolean
+          default: false
+        isHidden:
+          description: Признак отображения на главном экране АМ
+          type: boolean
+          default: false
+
+    CreditSettingDto:
+      type: object
+      properties:
+        isHidden:
+          description: Признак скрытия кредита
+          type: boolean
+          default: false
+
+    AccountSettingsUpdateRequest:
+      type: object
+      properties:
+        accountsSettings:
+          description: Настройки счета
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountDto'
+
+    AccountDto:
+      type: object
+      properties:
+        number:
+          description: Номер счёта
+          type: string
+        settings:
+          $ref: '#/components/schemas/UpdateSettingsDto'
+
+    UpdateSettingsDto:
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/AccountSettingDto'
+        credit:
+          $ref: '#/components/schemas/CreditSettingDto'
+
+    UpdateFavoriteAccountsOrder:
+      type: object
+      properties:
+        orderedFavoriteAccounts:
+          description: Список избранных счетов (с соблюдением порядка)
+          type: array
+          items:
+            description: Номер счета
+            maxLength: 20
+            type: string
+
+  examples:
+    errorExample:
+      summary: Ошибка
+      value:
+        errorId: "60ae9dcd-5d32-4981-979e-a2538c708b0b"
+        application: "account-settings-api"
+        errorCode: "SOME_ERROR"
+        messages:
+          en: "Something wrong"
+          ru: "Что-то пошло не так"
+    getSettingsResponseOkExample:
+      summary: Настройки найдены
+      value:
+        hasAccountSettings: true
+        accountsSettings:
+          - accountNumber: '40817810570000000001'
+            settings:
+              order: 0
+              account:
+                isFavorite: true
+                isHiddenAmount: true
+                isHidden: true
+          - accountNumber: '40817810570000000003'
+            settings:
+              account:
+                isFavorite: false
+                isHiddenAmount: true
+                isHidden: false
+          - accountNumber: '40817810570000000002'
+            settings:
+              credit:
+                isHidden: true
+    getSettingsResponseNotFoundExample:
+      summary: Настройки не найдены
+      value:
+        hasAccountSettings: false
+        accountsSettings: []
+    updateExampleNonFill:
+      summary: Пустые настроки
+      value:
+        accountsSettings:
+          - number: '40817810570000000001'
+            settings:
+              account: null
+              credit: null
+    updateExampleFill:
+      summary: Заполненные настроки
+      value:
+        accountsSettings:
+          - number: '40817810570000000001'
+            settings:
+              account:
+                isFavorite: false
+                isHiddenAmount: false
+                isHidden: false
+              credit:
+                isHidden: false
+    updateRequestExample:
+      summary: Изменение порядка избранных счетов
+      value:
+        - '40817810570000000003'
+        - '40817810570000000002'
+        - '40817810570000000001'
